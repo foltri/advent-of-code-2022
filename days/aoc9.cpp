@@ -24,30 +24,41 @@ struct Knot
 class Rope
 {
 private:
-    Knot m_head{};
-    Knot m_tail{};
+    std::vector<Knot> m_knots{};
     std::set<Knot> m_uniqueTailPositions{ Knot{ 0, 0}};
 
-    int getXDiff() const { return m_head.x - m_tail.x; }
-    int getYDiff() const { return m_head.y - m_tail.y; };
+    int getXDiff(size_t i) const { return m_knots[i-1].x - m_knots[i].x; }
+    int getYDiff(size_t i) const { return m_knots[i-1].y - m_knots[i].y; };
 
-    void moveTail()
+    void moveTails()
     {
-        if (std::abs(getXDiff()) > 1 || std::abs(getYDiff()) > 1)
+        for (size_t i{1}; i < m_knots.size(); ++i)
         {
-            do
+            if (std::abs(getXDiff(i)) > 1 || std::abs(getYDiff(i)) > 1)
             {
-                int xDiff { getXDiff() };
-                int yDiff { getYDiff() };
-                if (std::abs(xDiff) > 0) m_tail.move(xDiff / std::abs(xDiff), 0);
-                if (std::abs(yDiff) > 0) m_tail.move(0, yDiff / std::abs(yDiff));
-            } while ((getXDiff() != 0) == (getYDiff() != 0));
+                do
+                {
+                    int xDiff{ getXDiff(i) };
+                    int yDiff{ getYDiff(i) };
+                    if (std::abs(xDiff) > 0) m_knots[i].move(xDiff / std::abs(xDiff), 0);
+                    if (std::abs(yDiff) > 0) m_knots[i].move(0, yDiff / std::abs(yDiff));
+                } while ((getXDiff(i) + getYDiff(i)) > 2);
 
-            m_uniqueTailPositions.insert(m_tail);
+                // add new tail (last knot) position
+                if (i == m_knots.size()-1) m_uniqueTailPositions.insert(m_knots[i]);
+            }
         }
     }
 
 public:
+    Rope() = delete;
+
+    explicit Rope(size_t numKnots)
+    {
+        m_knots.reserve(numKnots);
+        for (size_t i{0}; i<numKnots; ++i) m_knots.push_back(Knot{});
+    }
+
     void move(char dir, int value)
     {
         int x{0};
@@ -63,8 +74,9 @@ public:
 
         for (int count{0}; count < value; ++count)
         {
-            m_head.move(x, y);
-            moveTail();
+            // move the head (first knot)
+            m_knots[0].move(x, y);
+            moveTails();
         }
     }
 
@@ -75,7 +87,7 @@ namespace aoc9
 {
     void run()
     {
-        Rope rope{};
+        Rope rope{10};
         for (const std::string& command : helper::readInput("../input/aoc9.txt"))
         {
             rope.move(command[0], std::stoi(command.substr(command.find(' '))));
