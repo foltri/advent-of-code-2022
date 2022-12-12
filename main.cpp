@@ -2,10 +2,10 @@
 // Created by Balint Zsiga on 2022. 12. 03..
 //
 
-#include "days/aoc9.h"
+#include "days/aoc10.h"
 
 int main()
 {
-    aoc9::run();
+    aoc10::run();
     return 0;
 }
